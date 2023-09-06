@@ -122,6 +122,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	fluidPath := req.GetVolumeContext()[common.VolumeAttrFluidPath]
 	mountType := req.GetVolumeContext()[common.VolumeAttrMountType]
 	subPath := req.GetVolumeContext()[common.VolumeAttrFluidSubPath]
+	nodePublishMethod := req.GetVolumeContext()[common.NodePublishMethod]
 
 	if fluidPath == "" {
 		// fluidPath = fmt.Sprintf("/mnt/%s", req.)
@@ -143,6 +144,15 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
+	// use symlink
+	if nodePublishMethod == common.NodePublishMethodSymlink {
+		if err := createSymlink(targetPath, mountPath); err != nil {
+			return nil, err
+		}
+		return &csi.NodePublishVolumeResponse{}, nil
+	}
+
+	// default use bind mount
 	args := []string{"--bind"}
 	// if len(mountOptions) > 0 {
 	// 	args = append(args, "-o", strings.Join(mountOptions, ","))
@@ -187,7 +197,7 @@ func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpu
 	defer ns.locks.Release(targetPath)
 
 	// check path existence
-	_, err := os.Stat(targetPath)
+	f, err := os.Lstat(targetPath)
 	// No need to unmount non-existing targetPath
 	if os.IsNotExist(err) {
 		glog.V(3).Infof("NodeUnpublishVolume: targetPath %s has been cleaned up, so it doesn't need to be unmounted", targetPath)
@@ -195,6 +205,11 @@ func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpu
 	}
 	if err != nil {
 		return nil, errors.Wrapf(err, "NodeUnpublishVolume: stat targetPath %s error %v", targetPath, err)
+	}
+
+	// remove if targetPath is a symlink
+	if f.Mode()&os.ModeSymlink != 0 {
+		return removeSymlink(targetPath)
 	}
 
 	// targetPath may be mount bind many times when mount point recovered.
@@ -576,4 +591,39 @@ func (ns *nodeServer) prepareSessMgr(workDir string) error {
 	}
 
 	return nil
+}
+
+func createSymlink(targetPath, mountPath string) error {
+	_, err := os.Lstat(targetPath)
+	// If the target path does not exist, it will be created when create symlink
+	if err != nil {
+		if !os.IsNotExist(err) {
+			glog.Errorf("Failed to lstat targetPath %s error %v", targetPath, err)
+			return status.Error(codes.Internal, err.Error())
+		}
+	} else {
+		// symlink would create targetPath so delete it first
+		glog.Infof("Deleting the targetPath before create symlink %v", targetPath)
+		err := os.Remove(targetPath)
+		if err != nil && !os.IsNotExist(err) {
+			glog.Errorf("Failed to delete the target path %s error %v", targetPath, err)
+			return status.Error(codes.Internal, fmt.Sprintf("Failed to delete the target path %s before create symlink, error %v", targetPath, err))
+		}
+	}
+	// create symlink
+	symlinkerr := os.Symlink(mountPath, targetPath)
+	if symlinkerr != nil {
+		glog.Errorf("Failed to create symlink %s link to %s, error %v", targetPath, mountPath, symlinkerr)
+		return status.Error(codes.Internal, fmt.Sprintf("Failed to create symlink %s -> %s, error %v", targetPath, mountPath, symlinkerr))
+	}
+	glog.Infof("Creating symlink %s link to %s successfully", targetPath, mountPath)
+	return nil
+}
+
+func removeSymlink(targetPath string) (*csi.NodeUnpublishVolumeResponse, error) {
+	glog.Infof("remove symlink targetPath %v", targetPath)
+	if err := os.Remove(targetPath); err != nil && !os.IsNotExist(err) {
+		return nil, status.Errorf(codes.Internal, "NodeUnpublishVolume: remove symlink %v error %v", targetPath, err)
+	}
+	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
