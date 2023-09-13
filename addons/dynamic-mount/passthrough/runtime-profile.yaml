@@ -1,17 +1,14 @@
 apiVersion: data.fluid.io/v1alpha1
 kind: ThinRuntimeProfile
 metadata:
-  name: ossfs-profile
+  name: passthrough
 spec:
-  fileSystemType: ossfs
+  fileSystemType: fuse
   fuse:
-    # image: fluidcloudnative/ossfs
-    # imageTag: v1.0
     image: registry.cn-beijing.aliyuncs.com/wsl-ns-p/fluid
-    imageTag: ossfs_v13.2
+    imageTag: thin-passthrough
     imagePullPolicy: IfNotPresent
     command:
-    - "/sbin/tini"
-    - "-g"
-    - "--"
-    - "/inotify.sh"
+    - "bash"
+    - "-c"
+    - "sleep inf"

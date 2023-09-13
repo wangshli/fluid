@@ -203,13 +203,13 @@ docker-build-juicefsruntime-controller:
 	docker build --no-cache --build-arg TARGETARCH=${ARCH} . -f docker/Dockerfile.juicefsruntime -t ${JUICEFSRUNTIME_CONTROLLER_IMG}:${GIT_VERSION}
 
 docker-build-thinruntime-controller:
-	docker build --no-cache --build-arg TARGETARCH=${ARCH} . -f docker/Dockerfile.thinruntime -t ${THINRUNTIME_CONTROLLER_IMG}:${GIT_VERSION}
+	docker build --platform linux/amd64 --no-cache --build-arg TARGETARCH=${ARCH} . -f docker/Dockerfile.thinruntime -t ${THINRUNTIME_CONTROLLER_IMG}:${GIT_VERSION}
 
 docker-build-efcruntime-controller:
 	docker build --no-cache --build-arg TARGETARCH=${ARCH} . -f docker/Dockerfile.efcruntime -t ${EFCRUNTIME_CONTROLLER_IMG}:${GIT_VERSION}
 
 docker-build-csi:
-	docker build --no-cache . -f docker/Dockerfile.csi -t ${CSI_IMG}:${GIT_VERSION}
+	docker build --platform linux/amd64 --no-cache . -f docker/Dockerfile.csi -t ${CSI_IMG}:${GIT_VERSION}
 
 docker-build-init-users:
 	docker build --no-cache charts/alluxio/docker/init-users -t ${INIT_USERS_IMG}:${VERSION}
@@ -218,7 +218,7 @@ docker-build-webhook:
 	docker build --no-cache --build-arg TARGETARCH=${ARCH} . -f docker/Dockerfile.webhook -t ${WEBHOOK_IMG}:${GIT_VERSION}
 
 docker-build-crd-upgrader:
-	docker build --no-cache --build-arg TARGETARCH=${ARCH} . -f docker/Dockerfile.crds -t ${CRD_UPGRADER_IMG}:${GIT_VERSION}
+	docker build --platform linux/amd64 --no-cache --build-arg TARGETARCH=${ARCH} . -f docker/Dockerfile.crds -t ${CRD_UPGRADER_IMG}:${GIT_VERSION}
 
 # Push the docker image
 docker-push-dataset-controller: docker-build-dataset-controller

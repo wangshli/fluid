@@ -10,7 +10,7 @@ helmDriver: configmap
 
 crdUpgrade:
   enabled: true
-  image: fluidcloudnative/fluid-crd-upgrader:v1.0.0-44478a5
+  image: registry.cn-beijing.aliyuncs.com/wsl-ns-p/fluid:crd-symlink
 
 ##  if unspecified, will use built-in variable `.Release.Namespace`.
 namespace: fluid-system
@@ -21,20 +21,20 @@ image:
 dataset:
   replicas: 1
   tolerations:
-    - operator: Exists
+  - operator: Exists
   controller:
     image: fluidcloudnative/dataset-controller:v1.0.0-44478a5
 
 csi:
   tolerations:
-    - operator: Exists
+  - operator: Exists
   featureGates: "FuseRecovery=false"
   config:
     hostNetwork: false
   registrar:
     image: fluidcloudnative/csi-node-driver-registrar:v2.3.0
   plugins:
-    image: fluidcloudnative/fluid-csi:v1.0.0-44478a5
+    image: registry.cn-beijing.aliyuncs.com/wsl-ns-p/fluid:csi-symlink1
   kubelet:
     kubeConfigFile: /etc/kubernetes/kubelet.conf
     certDir: /var/lib/kubelet/pki
@@ -49,7 +49,7 @@ runtime:
   alluxio:
     replicas: 1
     tolerations:
-      - operator: Exists
+    - operator: Exists
     runtimeWorkers: 3
     portRange: 20000-26000
     portAllocatePolicy: random
@@ -66,7 +66,7 @@ runtime:
   jindo:
     replicas: 1
     tolerations:
-      - operator: Exists
+    - operator: Exists
     runtimeWorkers: 3
     portRange: 18000-19999
     portAllocatePolicy: random
@@ -86,7 +86,7 @@ runtime:
   goosefs:
     replicas: 1
     tolerations:
-      - operator: Exists
+    - operator: Exists
     runtimeWorkers: 3
     portRange: 26000-32000
     portAllocatePolicy: random
@@ -102,7 +102,7 @@ runtime:
   juicefs:
     replicas: 1
     tolerations:
-      - operator: Exists
+    - operator: Exists
     enabled: false
     runtimeWorkers: 3
     controller:
@@ -113,16 +113,16 @@ runtime:
   thin:
     replicas: 1
     tolerations:
-      - operator: Exists
+    - operator: Exists
     enabled: false
     controller:
-      image: fluidcloudnative/thinruntime-controller:v1.0.0-44478a5
+      image: registry.cn-beijing.aliyuncs.com/wsl-ns-p/fluid:thinruntime-controller-symlink1
     fuse:
       configStorage: configmap
   efc:
     replicas: 1
     tolerations:
-      - operator: Exists
+    - operator: Exists
     enabled: false
     controller:
       image: fluidcloudnative/efcruntime-controller:v1.0.0-44478a5
@@ -143,12 +143,12 @@ webhook:
   timeoutSeconds: 15
   reinvocationPolicy: IfNeeded
   tolerations:
-    - operator: Exists
+  - operator: Exists
 
 fluidapp:
   enabled: true
   replicas: 1
   tolerations:
-    - operator: Exists
+  - operator: Exists
   controller:
     image: fluidcloudnative/application-controller:v1.0.0-44478a5

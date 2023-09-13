@@ -137,7 +137,8 @@ if __name__=="__main__":
         path = mount.get("path")
         if path is not None:
             bucket_path += ":/"+path if not path.startswith("/") else ":"+path
-        options = "-ourl={}".format(mount["options"]["url"])
+        accessModesOptions = "-oro"
+        options = accessModesOptions+" -ourl={}".format(mount["options"]["url"])
         # parse more options here
         if mount["options"].get("allow_other") is not None:
             options += " -oallow_other"
